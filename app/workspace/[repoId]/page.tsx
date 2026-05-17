@@ -14,23 +14,36 @@ export default function WorkspacePage() {
   const repoId = typeof params?.repoId === "string" ? params.repoId : fallbackRepositories[0].id;
 
   const [repos, setRepos] = useState<Repo[]>(fallbackRepositories);
+  const [isLoadingRepo, setIsLoadingRepo] = useState(status === "authenticated");
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    fetch("/api/github/repositories")
-      .then((res) => res.json())
-      .then((data: { repositories?: Repo[] }) => {
-        if (data.repositories?.length) setRepos(data.repositories);
-      })
-      .catch(() => setRepos(fallbackRepositories));
-  }, [status]);
+    setIsLoadingRepo(true);
 
-  if (status === "loading") {
+    Promise.all([
+      fetch("/api/github/repositories").then((res) => res.json()),
+      fetch(`/api/github/repositories/${repoId}`).then((res) => res.json())
+    ])
+      .then(([listData, detailData]: [{ repositories?: Repo[] }, { repository?: Repo }]) => {
+        const nextRepos = listData.repositories?.length ? listData.repositories : fallbackRepositories;
+        const repository = detailData.repository;
+
+        if (repository) {
+          setRepos([repository, ...nextRepos.filter((repo) => repo.id !== repository.id)]);
+        } else {
+          setRepos(nextRepos);
+        }
+      })
+      .catch(() => setRepos(fallbackRepositories))
+      .finally(() => setIsLoadingRepo(false));
+  }, [status, repoId]);
+
+  if (status === "loading" || isLoadingRepo) {
     return (
       <main className="flex min-h-screen items-center justify-center px-4 bg-[#060914]">
         <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-4 text-slate-300">
           <Loader2 className="h-5 w-5 animate-spin text-rescue-cyan" />
-          Loading workspace...
+          Loading repository files...
         </div>
       </main>
     );

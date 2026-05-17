@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { repositories } from "@/lib/mock-data";
+import { createRepoPreviewFiles } from "@/lib/repo-utils";
 
 export async function GET() {
   const session = (await getServerSession(authOptions)) as Session | null;
@@ -31,15 +32,16 @@ export async function GET() {
 
       return NextResponse.json({
         repositories: githubRepos.map((repo, index) => ({
-          ...repositories[index % repositories.length],
           id: String(repo.id),
           name: repo.name,
           owner: repo.owner.login,
           branch: repo.default_branch,
+          status: index % 5 === 0 ? "review" : "healthy",
           updated: new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
             Math.max(-30, Math.round((new Date(repo.updated_at).getTime() - Date.now()) / 86400000)),
             "day"
-          )
+          ),
+          files: createRepoPreviewFiles(repo.name, repo.default_branch)
         })),
         source: "github"
       });
