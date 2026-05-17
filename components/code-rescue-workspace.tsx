@@ -19,7 +19,6 @@ import {
   PanelLeft,
   Rocket,
   Save,
-  Search,
   Send,
   ShieldAlert,
   Sparkles,
@@ -28,7 +27,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { MonacoPane } from "@/components/monaco-pane";
 import { cn } from "@/lib/utils";
 import { deploymentLog, repositories as fallbackRepositories, type Repo, type RepoFile } from "@/lib/mock-data";
@@ -117,23 +116,18 @@ export function CodeRescueWorkspace({
   const [isGenerating, setIsGenerating] = useState(false);
   const [applied, setApplied] = useState(false);
 
-  const statusMeta = useMemo(
-    () => ({
-      failing: "Build failing",
-      review: "Needs review",
-      healthy: "Healthy"
-    }),
-    []
-  );
-
-  function chooseRepo(repoId: string) {
-    const repo = repositories.find((item) => item.id === repoId) ?? repositories[0];
-    setSelectedRepoId(repo.id);
-    setSelectedFileId(repo.files[0].id);
-    setOpenTabs(repo.files.slice(0, 2));
-    setFileContent(repo.files[0].content);
-    setApplied(false);
-  }
+  useEffect(() => {
+    const currentRepo = repositories.find((repo) => repo.id === initialRepoId) ?? repositories[0];
+    if (currentRepo) {
+      setSelectedRepoId(currentRepo.id);
+      if (currentRepo.files.length > 0) {
+        const firstFile = currentRepo.files[0];
+        setSelectedFileId(firstFile.id);
+        setOpenTabs(currentRepo.files.slice(0, Math.min(2, currentRepo.files.length)));
+        setFileContent(firstFile.content);
+      }
+    }
+  }, [repositories, initialRepoId]);
 
   function chooseFile(file: RepoFile) {
     setSelectedFileId(file.id);
