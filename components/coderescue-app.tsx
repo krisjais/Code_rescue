@@ -16,8 +16,8 @@ import {
   Zap
 } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
-import { CodeRescueWorkspace } from "@/components/code-rescue-workspace";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { repositories as fallbackRepositories, type Repo } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -29,9 +29,9 @@ type AuthDiagnostics = {
 
 export function CodeRescueApp() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [repos, setRepos] = useState<Repo[]>(fallbackRepositories);
   const [repoSource, setRepoSource] = useState<"mock" | "github">("mock");
-  const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<AuthDiagnostics | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -70,11 +70,6 @@ export function CodeRescueApp() {
       });
   }, [status]);
 
-  const selectedRepo = useMemo(
-    () => repos.find((repo) => repo.id === selectedRepoId),
-    [repos, selectedRepoId]
-  );
-
   if (status === "loading") {
     return (
       <main className="flex min-h-screen items-center justify-center px-4">
@@ -103,23 +98,12 @@ export function CodeRescueApp() {
     );
   }
 
-  if (!selectedRepo) {
-    return (
-      <RepositoryPicker
-        repos={repos}
-        source={repoSource}
-        userName={session.user?.name ?? session.user?.email ?? "developer"}
-        onChoose={setSelectedRepoId}
-      />
-    );
-  }
-
   return (
-    <CodeRescueWorkspace
-      repositories={repos}
-      initialRepoId={selectedRepo.id}
+    <RepositoryPicker
+      repos={repos}
+      source={repoSource}
       userName={session.user?.name ?? session.user?.email ?? "developer"}
-      onBackToRepos={() => setSelectedRepoId(null)}
+      onChoose={(repoId) => router.push(`/workspace/${repoId}`)}
     />
   );
 }
