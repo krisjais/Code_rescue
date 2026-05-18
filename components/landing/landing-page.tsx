@@ -10,7 +10,15 @@ import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { CTASection } from "@/components/landing/cta-section";
 import { Footer } from "@/components/landing/footer";
 
-export function LandingPage() {
+import type { AuthDiagnostics } from "@/features/auth/services/client";
+
+type LandingPageProps = {
+  diagnostics?: AuthDiagnostics | null;
+  authError?: string | null;
+  onSignIn?: () => void;
+};
+
+export function LandingPage({ diagnostics, authError, onSignIn }: LandingPageProps) {
   return (
     <div className="relative min-h-screen bg-[#050816] landing-page">
       {/* Global ambient orbs — fixed to avoid scroll jank */}
@@ -24,15 +32,15 @@ export function LandingPage() {
 
       {/* Page content */}
       <div className="relative z-10">
-        <Navbar />
+        <Navbar onSignIn={onSignIn} />
         <main>
-          <HeroSection />
+          <HeroSection onSignIn={onSignIn} diagnostics={diagnostics} authError={authError} />
           <StatsSection />
           <FeaturesSection />
           <WorkflowSection />
           <DemoSection />
           <TestimonialsSection />
-          <CTASection />
+          <CTASection onSignIn={onSignIn} />
         </main>
         <Footer />
       </div>

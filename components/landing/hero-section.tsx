@@ -135,7 +135,16 @@ const fadeUp: Variants = {
   }),
 };
 
-export function HeroSection() {
+import type { AuthDiagnostics } from "@/features/auth/services/client";
+import { InlineAlert } from "@/features/diagnostics/components/inline-alert";
+
+type HeroSectionProps = {
+  onSignIn?: () => void;
+  diagnostics?: AuthDiagnostics | null;
+  authError?: string | null;
+};
+
+export function HeroSection({ onSignIn, diagnostics, authError }: HeroSectionProps) {
   return (
     <section id="hero" className="relative min-h-screen flex items-center pt-28 pb-16 overflow-hidden">
       {/* Background orbs */}
@@ -190,6 +199,28 @@ export function HeroSection() {
               Connect your GitHub repos, diagnose deployment failures, edit code in the browser, and ship AI-generated fixes — all in one cinematic workspace.
             </motion.p>
 
+            {/* Diagnostics alerts */}
+            {(authError || (diagnostics && !diagnostics.githubConfigured)) && (
+              <motion.div custom={2.5} variants={fadeUp} initial="hidden" animate="visible" className="space-y-3 max-w-lg">
+                {authError && (
+                  <InlineAlert tone="danger">
+                    {authError}
+                    {diagnostics && (
+                      <p className="mt-1.5 text-xs text-red-200/80">
+                        GitHub configured: {diagnostics.githubConfigured ? "yes" : "no"}. Callback URL must match{" "}
+                        <span className="font-mono bg-black/20 px-1 py-0.5 rounded">{diagnostics.callbackUrl}</span>
+                      </p>
+                    )}
+                  </InlineAlert>
+                )}
+                {diagnostics && !diagnostics.githubConfigured && (
+                  <InlineAlert tone="warning">
+                    Add `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `NEXTAUTH_SECRET` to `.env.local`, then restart the server.
+                  </InlineAlert>
+                )}
+              </motion.div>
+            )}
+
             {/* CTAs */}
             <motion.div
               custom={3}
@@ -198,17 +229,23 @@ export function HeroSection() {
               animate="visible"
               className="flex flex-wrap gap-3"
             >
-              <button className="relative flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white overflow-hidden group transition-transform hover:scale-[1.02] active:scale-[0.98]">
+              <button
+                onClick={onSignIn}
+                className="relative flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white overflow-hidden group transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#7B61FF] to-[#00D9FF]" />
                 <div className="absolute inset-0 bg-gradient-to-r from-[#7B61FF] to-[#00D9FF] blur-lg opacity-50 group-hover:opacity-80 transition-opacity" />
                 <Github size={18} className="relative" />
                 <span className="relative">Connect GitHub</span>
               </button>
 
-              <button className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white/80 hover:text-white border border-white/10 hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.06] transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <a
+                href="#workflow"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white/80 hover:text-white border border-white/10 hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.06] transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
                 <Play size={16} fill="currentColor" />
                 See Workflow
-              </button>
+              </a>
             </motion.div>
 
             {/* Social proof */}

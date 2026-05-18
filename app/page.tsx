@@ -1,5 +1,5 @@
-import { LandingPage } from "@/components/landing/landing-page";
+import { CodeRescueApp } from "@/components/coderescue-app";
 
 export default function Home() {
-  return <LandingPage />;
+  return <CodeRescueApp />;
 }

@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LandingPage } from "@/features/auth/components/landing-page";
+import { LandingPage } from "@/components/landing/landing-page";
 import { useAuthDiagnostics } from "@/features/auth/hooks/use-auth-diagnostics";
 import { RepositoryPicker } from "@/features/github/components/repository-picker";
 import { useRepositories } from "@/features/github/hooks/use-repositories";

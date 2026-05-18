@@ -3,7 +3,11 @@
 import { motion } from "framer-motion";
 import { Github, Zap, ArrowRight } from "lucide-react";
 
-export function CTASection() {
+type CTASectionProps = {
+  onSignIn?: () => void;
+};
+
+export function CTASection({ onSignIn }: CTASectionProps) {
   return (
     <section id="cta" className="relative py-32 overflow-hidden">
       {/* Huge central glow orb */}
@@ -54,7 +58,10 @@ export function CTASection() {
           transition={{ delay: 0.3 }}
           className="flex flex-wrap gap-4 justify-center"
         >
-          <button className="relative flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white text-base overflow-hidden group transition-transform hover:scale-[1.03] active:scale-[0.98]">
+          <button
+            onClick={onSignIn}
+            className="relative flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white text-base overflow-hidden group transition-transform hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
+          >
             <div className="absolute inset-0 bg-gradient-to-r from-[#7B61FF] to-[#00D9FF]" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#7B61FF] to-[#00D9FF] blur-xl opacity-50 group-hover:opacity-80 transition-opacity" />
             <Zap size={18} className="relative" fill="white" />
