@@ -1,21 +1,5 @@
-export type RepoFile = {
-  id: string;
-  name: string;
-  path: string;
-  language: string;
-  dirty?: boolean;
-  content: string;
-};
-
-export type Repo = {
-  id: string;
-  name: string;
-  owner: string;
-  branch: string;
-  status: "healthy" | "failing" | "review";
-  updated: string;
-  files: RepoFile[];
-};
+import type { Repo } from "@/features/github/types";
+export type { Repo, RepoFile } from "@/features/github/types";
 
 export const repositories: Repo[] = [
   {

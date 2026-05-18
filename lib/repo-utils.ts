@@ -1,4 +1,4 @@
-import type { RepoFile } from "@/lib/mock-data";
+import type { RepoFile } from "@/features/github/types";
 
 const extensionLanguage: Record<string, string> = {
   ".js": "javascript",

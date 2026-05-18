@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Providers } from "@/components/session-provider";
+import { Providers } from "@/features/auth/components/session-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
