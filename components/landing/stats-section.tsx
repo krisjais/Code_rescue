@@ -1,7 +1,6 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 
 const stats = [
   { value: "98.7%", label: "AI Fix Accuracy", color: "#00FFA3", sub: "Verified across 50K+ incidents" },

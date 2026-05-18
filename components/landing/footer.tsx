@@ -1,6 +1,7 @@
 "use client";
 
 import { Github, Twitter, Zap } from "lucide-react";
+import Link from "next/link";
 
 const links = {
   Product: ["Features", "Workflow", "AI Engine", "Changelog"],
@@ -19,7 +20,7 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10">
           {/* Brand */}
           <div className="col-span-2 md:col-span-3 lg:col-span-1">
-            <a href="/" className="flex items-center gap-2.5 mb-4">
+            <Link href="/" className="flex items-center gap-2.5 mb-4">
               <div className="relative w-8 h-8">
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#00D9FF] to-[#7B61FF]" />
                 <div className="absolute inset-0 rounded-lg flex items-center justify-center">
@@ -29,7 +30,7 @@ export function Footer() {
               <span className="text-white font-semibold text-sm">
                 CodeRescue <span className="text-[#00D9FF]">AI</span>
               </span>
-            </a>
+            </Link>
             <p className="text-white/35 text-sm leading-relaxed mb-5 max-w-[200px]">
               AI-powered emergency coding workspace for engineers who ship.
             </p>

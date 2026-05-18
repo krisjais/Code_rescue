@@ -1,8 +1,9 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Github, Menu, X, Zap } from "lucide-react";
+import Link from "next/link";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -38,7 +39,7 @@ export function Navbar() {
       >
         <div className="flex items-center justify-between gap-6">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2.5 group shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
             <div className="relative w-8 h-8">
               <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#00D9FF] to-[#7B61FF] opacity-90 group-hover:opacity-100 transition-opacity" />
               <div className="absolute inset-0 rounded-lg flex items-center justify-center">
@@ -49,7 +50,7 @@ export function Navbar() {
             <span className="text-white font-semibold text-sm tracking-tight">
               CodeRescue <span className="text-[#00D9FF]">AI</span>
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">

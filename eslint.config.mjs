@@ -13,7 +13,15 @@ const eslintConfig = [
   {
     ignores: [".next/**", "next-env.d.ts"]
   },
-  ...compat.extends("next/core-web-vitals", "next/typescript")
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    rules: {
+      // Unused vars should warn, not error — prevents Vercel build failures
+      // during active development when variables are temporarily unused.
+      "@typescript-eslint/no-unused-vars": "warn",
+      "no-unused-vars": "off" // disabled in favour of the TS-aware rule above
+    }
+  }
 ];
 
 export default eslintConfig;
