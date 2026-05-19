@@ -2,6 +2,7 @@
 
 import { Github, LogOut, PanelLeft, Rocket, ShieldAlert } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { useWorkspace } from "@/features/editor/context/workspace-context";
 
 type WorkspaceHeaderProps = {
   userName: string;
@@ -9,6 +10,8 @@ type WorkspaceHeaderProps = {
 };
 
 export function WorkspaceHeader({ userName, onBackToRepos }: WorkspaceHeaderProps) {
+  const { commitChanges } = useWorkspace();
+
   return (
     <header className="flex flex-col gap-3 border-b border-white/10 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5">
       <div className="flex items-center gap-3">
@@ -47,7 +50,10 @@ export function WorkspaceHeader({ userName, onBackToRepos }: WorkspaceHeaderProp
           <LogOut className="h-4 w-4" />
           Sign out
         </button>
-        <button className="focus-ring inline-flex h-10 items-center gap-2 rounded-lg bg-rescue-cyan px-3 text-sm font-semibold text-slate-950 transition hover:bg-rescue-green">
+        <button 
+          onClick={commitChanges}
+          className="focus-ring inline-flex h-10 items-center gap-2 rounded-lg bg-rescue-cyan px-3 text-sm font-semibold text-slate-950 transition hover:bg-rescue-green"
+        >
           <Rocket className="h-4 w-4" />
           Commit and push
         </button>

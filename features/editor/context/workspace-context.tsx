@@ -24,6 +24,7 @@ type WorkspaceContextValue = {
   setLogText: (value: string) => void;
   setPrompt: (value: string) => void;
   runAssistant: (mode: AssistantMode) => void;
+  commitChanges: () => void;
 };
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -92,6 +93,11 @@ export function WorkspaceProvider({
     }, 650);
   }, []);
 
+  const commitChanges = useCallback(() => {
+    setToast("Changes committed and pushed to main successfully!");
+    setApplied(false);
+  }, []);
+
   const value = useMemo(
     () => ({
       repositories,
@@ -110,7 +116,8 @@ export function WorkspaceProvider({
       setFileContent,
       setLogText,
       setPrompt,
-      runAssistant
+      runAssistant,
+      commitChanges
     }),
     [
       repositories,
@@ -125,7 +132,8 @@ export function WorkspaceProvider({
       applied,
       toast,
       selectFile,
-      runAssistant
+      runAssistant,
+      commitChanges
     ]
   );
 
