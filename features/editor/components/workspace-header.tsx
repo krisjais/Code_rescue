@@ -1,6 +1,6 @@
 "use client";
 
-import { Github, LogOut, PanelLeft, Rocket, ShieldAlert } from "lucide-react";
+import { Github, Loader2, LogOut, PanelLeft, Rocket, ShieldAlert } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useWorkspace } from "@/features/editor/context/workspace-context";
 
@@ -10,7 +10,7 @@ type WorkspaceHeaderProps = {
 };
 
 export function WorkspaceHeader({ userName, onBackToRepos }: WorkspaceHeaderProps) {
-  const { commitChanges } = useWorkspace();
+  const { commitChanges, isCommitting } = useWorkspace();
 
   return (
     <header className="flex flex-col gap-3 border-b border-white/10 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5">
@@ -52,10 +52,11 @@ export function WorkspaceHeader({ userName, onBackToRepos }: WorkspaceHeaderProp
         </button>
         <button 
           onClick={commitChanges}
-          className="focus-ring inline-flex h-10 items-center gap-2 rounded-lg bg-rescue-cyan px-3 text-sm font-semibold text-slate-950 transition hover:bg-rescue-green"
+          disabled={isCommitting}
+          className="focus-ring inline-flex h-10 items-center gap-2 rounded-lg bg-rescue-cyan px-3 text-sm font-semibold text-slate-950 transition hover:bg-rescue-green disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Rocket className="h-4 w-4" />
-          Commit and push
+          {isCommitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+          {isCommitting ? "Pushing..." : "Commit and push"}
         </button>
       </div>
     </header>

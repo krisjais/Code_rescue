@@ -30,11 +30,11 @@ function WorkspaceLayout({
   userName: string;
   onBackToRepos?: () => void;
 }) {
-  const { toast } = useWorkspace();
+  const { toast, toastTone } = useWorkspace();
 
   return (
     <main className="min-h-screen px-3 py-3 text-slate-100 md:px-5 md:py-5">
-      <Toast message={toast} />
+      <Toast message={toast} tone={toastTone} />
       <div className="mx-auto flex min-h-[calc(100vh-40px)] max-w-[1800px] flex-col overflow-hidden rounded-[22px] border border-white/10 bg-[#060914]/86 shadow-card backdrop-blur-2xl">
         <WorkspaceHeader userName={userName} onBackToRepos={onBackToRepos} />
         <section className="grid flex-1 grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)_380px]">

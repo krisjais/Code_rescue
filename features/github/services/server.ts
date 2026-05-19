@@ -28,7 +28,7 @@ type GitBlob = {
   encoding?: string;
 };
 
-function githubHeaders(accessToken: string) {
+export function githubHeaders(accessToken: string) {
   return {
     Accept: "application/vnd.github+json",
     Authorization: `Bearer ${accessToken}`,
