@@ -23,6 +23,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ rep
       source: "github"
     });
   } catch (error) {
+    console.error(`[GitHub API Error for ${repoId}]`, error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unable to load repository files" },
       { status: 404 }

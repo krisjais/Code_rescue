@@ -32,7 +32,8 @@ export function githubHeaders(accessToken: string) {
   return {
     Accept: "application/vnd.github+json",
     Authorization: `Bearer ${accessToken}`,
-    "X-GitHub-Api-Version": "2022-11-28"
+    "X-GitHub-Api-Version": "2022-11-28",
+    "User-Agent": "CodeRescue-AI"
   };
 }
 

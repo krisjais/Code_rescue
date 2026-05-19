@@ -16,6 +16,7 @@ export async function GET() {
         source: "github"
       });
     } catch (error) {
+      console.error("[GitHub API Error]", error);
       return NextResponse.json(
         { repositories, source: "mock", error: error instanceof Error ? error.message : "GitHub request failed" },
         { status: 200 }

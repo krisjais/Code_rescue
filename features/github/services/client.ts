@@ -16,7 +16,7 @@ export async function fetchRepositories() {
   const response = await fetch("/api/github/repositories");
   const data = (await response.json()) as RepositoriesResponse;
 
-  if (!response.ok) {
+  if (!response.ok || data.error) {
     throw new Error(data.error ?? "Unable to load repositories");
   }
 
