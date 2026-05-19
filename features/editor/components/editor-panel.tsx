@@ -55,8 +55,10 @@ export function EditorPanel() {
         ))}
       </div>
 
-      <div className="min-h-0 flex-1">
-        <MonacoPane language={selectedFile.language} value={fileContent} onChange={setFileContent} />
+      <div className="relative min-h-0 flex-1">
+        <div className="absolute inset-0">
+          <MonacoPane language={selectedFile.language} value={fileContent} onChange={setFileContent} />
+        </div>
       </div>
 
       <div className="grid border-t border-white/10 bg-black/20 md:grid-cols-3">
