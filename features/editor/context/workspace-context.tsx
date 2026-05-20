@@ -2,10 +2,11 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { AssistantMode } from "@/features/ai/types";
-import { demoFixedCode, generateCommitMessage } from "@/features/ai/lib/demo-ai";
+import { generateCommitMessage } from "@/features/ai/lib/demo-ai";
 import { commitFile } from "@/features/commits/services/client";
 import type { Repo, RepoFile } from "@/features/github/types";
 import { deploymentLog, repositories as fallbackRepositories } from "@/lib/mock-data";
+import { generateDiff, type DiffLine } from "@/lib/repo-utils";
 
 type WorkspaceContextValue = {
   repositories: Repo[];
@@ -28,6 +29,14 @@ type WorkspaceContextValue = {
   setPrompt: (value: string) => void;
   runAssistant: (mode: AssistantMode) => void;
   commitChanges: () => Promise<void>;
+  diffMode: boolean;
+  setDiffMode: (value: boolean) => void;
+  saveFile: () => void;
+  originalContent: string;
+  diffLines: DiffLine[];
+  selectedModel: string;
+  setSelectedModel: (value: string) => void;
+  aiSummary: string;
 };
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -44,11 +53,9 @@ export function WorkspaceProvider({
   children
 }: WorkspaceProviderProps) {
   const [selectedRepoId, setSelectedRepoId] = useState(initialRepoId ?? repositories[0].id);
-  const selectedRepo = repositories.find((repo) => repo.id === selectedRepoId) ?? repositories[0];
-  const [selectedFileId, setSelectedFileId] = useState(selectedRepo.files[0].id);
-  const selectedFile = selectedRepo.files.find((file) => file.id === selectedFileId) ?? selectedRepo.files[0];
-  const [openTabs, setOpenTabs] = useState<RepoFile[]>(selectedRepo.files.slice(0, 2));
-  const [fileContent, setFileContent] = useState(selectedFile.content);
+  const [selectedFileId, setSelectedFileId] = useState("");
+  const [openTabIds, setOpenTabIds] = useState<string[]>([]);
+  const [fileContent, setFileContent] = useState("");
   const [logText, setLogText] = useState(deploymentLog);
   const [prompt, setPrompt] = useState("Fix the selected error and keep credentials server-side.");
   const [assistantMode, setAssistantMode] = useState<AssistantMode>("fix");
@@ -58,16 +65,63 @@ export function WorkspaceProvider({
   const [toast, setToast] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "warning">("success");
 
+  // Custom added states
+  const [modifiedFiles, setModifiedFiles] = useState<Record<string, string>>({});
+  const [unsavedChanges, setUnsavedChanges] = useState<Record<string, string>>({});
+  const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
+  const [diffMode, setDiffMode] = useState(false);
+  const [aiSummary, setAiSummary] = useState("");
+
+  // Compute selectedRepo with saved (modified) files integrated
+  const selectedRepo = useMemo(() => {
+    const repo = repositories.find((repo) => repo.id === selectedRepoId) ?? repositories[0];
+    if (!repo) return repo;
+    return {
+      ...repo,
+      files: repo.files.map((file) => ({
+        ...file,
+        content: modifiedFiles[file.id] ?? file.content
+      }))
+    };
+  }, [repositories, selectedRepoId, modifiedFiles]);
+
+  // Compute selectedFile from selectedRepo.files
+  const selectedFile = useMemo(() => {
+    return selectedRepo.files.find((file) => file.id === selectedFileId) ?? selectedRepo.files[0];
+  }, [selectedRepo.files, selectedFileId]);
+
+  // Original unmodified file content for diff viewer
+  const originalContent = useMemo(() => {
+    const baseRepo = repositories.find((repo) => repo.id === selectedRepoId) ?? repositories[0];
+    if (!baseRepo) return "";
+    const baseFile = baseRepo.files.find((file) => file.id === selectedFileId) ?? baseRepo.files[0];
+    return baseFile?.content ?? "";
+  }, [repositories, selectedRepoId, selectedFileId]);
+
+  // Open tabs dynamically mapped to updated files
+  const openTabs = useMemo(() => {
+    return openTabIds
+      .map((id) => selectedRepo.files.find((f) => f.id === id))
+      .filter((f): f is RepoFile => !!f);
+  }, [openTabIds, selectedRepo.files]);
+
+  // Generate dynamic diff preview
+  const diffLines = useMemo(() => {
+    return generateDiff(originalContent, fileContent);
+  }, [originalContent, fileContent]);
+
+  // Track initial repository load and repo swaps
   useEffect(() => {
     const nextRepo = repositories.find((repo) => repo.id === initialRepoId) ?? repositories[0];
     if (!nextRepo) return;
 
     const firstFile = nextRepo.files[0];
     setSelectedRepoId(nextRepo.id);
-    setSelectedFileId(firstFile.id);
-    setOpenTabs(nextRepo.files.slice(0, Math.min(2, nextRepo.files.length)));
-    setFileContent(firstFile.content);
+    setSelectedFileId(firstFile?.id ?? "");
+    setOpenTabIds(nextRepo.files.slice(0, Math.min(2, nextRepo.files.length)).map((f) => f.id));
+    setFileContent(unsavedChanges[firstFile?.id] ?? modifiedFiles[firstFile?.id] ?? firstFile?.content ?? "");
     setApplied(false);
+    setDiffMode(false);
   }, [repositories, initialRepoId]);
 
   useEffect(() => {
@@ -78,27 +132,82 @@ export function WorkspaceProvider({
 
   const selectFile = useCallback((file: RepoFile) => {
     setSelectedFileId(file.id);
-    setFileContent(file.content);
-    setOpenTabs((tabs) => (tabs.some((tab) => tab.id === file.id) ? tabs : [...tabs, file]));
-  }, []);
+    setFileContent(unsavedChanges[file.id] ?? file.content);
+    setOpenTabIds((ids) => (ids.includes(file.id) ? ids : [...ids, file.id]));
+    setDiffMode(false);
+  }, [unsavedChanges]);
 
-  const runAssistant = useCallback((mode: AssistantMode) => {
+  const handleFileContentChange = useCallback((value: string) => {
+    setFileContent(value);
+    setUnsavedChanges((current) => ({
+      ...current,
+      [selectedFileId]: value
+    }));
+  }, [selectedFileId]);
+
+  const saveFile = useCallback(() => {
+    if (!selectedFile) return;
+    setModifiedFiles((current) => ({
+      ...current,
+      [selectedFile.id]: fileContent
+    }));
+    setUnsavedChanges((current) => {
+      const next = { ...current };
+      delete next[selectedFile.id];
+      return next;
+    });
+    setToastTone("success");
+    setToast(`Saved changes for ${selectedFile.name}`);
+  }, [selectedFile, fileContent]);
+
+  const runAssistant = useCallback(async (mode: AssistantMode) => {
     setAssistantMode(mode);
     setIsGenerating(true);
+    setAiSummary("");
 
-    window.setTimeout(() => {
-      if (mode === "fix") {
-        setFileContent((current) => (current.includes("github.com/login/oauth") ? demoFixedCode : current));
-        setApplied(true);
-        setToastTone("success");
-        setToast("AI patch prepared for review");
-      } else {
-        setToastTone("success");
-        setToast(`${mode === "explain" ? "Explanation" : "Suggestion"} generated`);
+    try {
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          mode,
+          log: logText,
+          prompt,
+          filePath: selectedFile.path,
+          fileContent: fileContent,
+          model: selectedModel
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error ?? "AI generation failed");
       }
+
+      const data = await response.json();
+
+      setAiSummary(data.summary);
+
+      if (data.patch) {
+        setFileContent(data.patch);
+        setUnsavedChanges((current) => ({
+          ...current,
+          [selectedFile.id]: data.patch
+        }));
+        setApplied(true);
+      }
+
+      setToastTone("success");
+      setToast("AI plan generated successfully");
+    } catch (error) {
+      setToastTone("warning");
+      setToast(error instanceof Error ? error.message : "AI generation failed");
+    } finally {
       setIsGenerating(false);
-    }, 650);
-  }, []);
+    }
+  }, [logText, prompt, selectedFile, fileContent, selectedModel]);
 
   const commitChanges = useCallback(async () => {
     if (isCommitting) return;
@@ -114,6 +223,13 @@ export function WorkspaceProvider({
         message: commitMessage
       });
 
+      // Clear the saved modification since it's pushed to Git
+      setModifiedFiles((current) => {
+        const next = { ...current };
+        delete next[selectedFile.id];
+        return next;
+      });
+
       setToastTone("success");
       setToast(`Committed ${result.path} to ${result.branch}`);
       setApplied(false);
@@ -123,7 +239,7 @@ export function WorkspaceProvider({
     } finally {
       setIsCommitting(false);
     }
-  }, [fileContent, isCommitting, selectedFile.path, selectedRepo.branch, selectedRepo.id]);
+  }, [fileContent, isCommitting, selectedFile, selectedRepo]);
 
   const value = useMemo(
     () => ({
@@ -140,13 +256,21 @@ export function WorkspaceProvider({
       applied,
       toast,
       toastTone,
-      commitMessage: generateCommitMessage(selectedFile.path),
+      commitMessage: generateCommitMessage(selectedFile?.path ?? ""),
       selectFile,
-      setFileContent,
+      setFileContent: handleFileContentChange,
       setLogText,
       setPrompt,
       runAssistant,
-      commitChanges
+      commitChanges,
+      diffMode,
+      setDiffMode,
+      saveFile,
+      originalContent,
+      diffLines,
+      selectedModel,
+      setSelectedModel,
+      aiSummary
     }),
     [
       repositories,
@@ -163,8 +287,15 @@ export function WorkspaceProvider({
       toast,
       toastTone,
       selectFile,
+      handleFileContentChange,
       runAssistant,
-      commitChanges
+      commitChanges,
+      diffMode,
+      saveFile,
+      originalContent,
+      diffLines,
+      selectedModel,
+      aiSummary
     ]
   );
 
@@ -176,3 +307,4 @@ export function useWorkspace() {
   if (!context) throw new Error("useWorkspace must be used inside WorkspaceProvider");
   return context;
 }
+

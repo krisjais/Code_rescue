@@ -16,7 +16,10 @@ export function AiAssistant() {
     setPrompt,
     assistantMode,
     isGenerating,
-    runAssistant
+    runAssistant,
+    selectedModel,
+    setSelectedModel,
+    aiSummary
   } = useWorkspace();
   const parsedLog = parseDeploymentLog(logText);
 
@@ -24,18 +27,28 @@ export function AiAssistant() {
     <aside className="glass flex min-h-[620px] flex-col border-l border-white/10 lg:min-h-0">
       <div className="border-b border-white/10 p-4">
         <div className="flex items-center justify-between gap-2">
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-2 text-sm font-semibold text-white">
               <Bot className="h-4 w-4 text-rescue-pink" />
               AI rescue assistant
             </div>
-            <p className="text-xs text-slate-500">Claude, GPT-4o, and Gemini ready</p>
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="mt-1.5 block w-full max-w-[180px] rounded border border-white/10 bg-black/40 px-2 py-1 text-[11px] text-slate-300 outline-none transition focus:border-rescue-pink hover:bg-black/60 cursor-pointer"
+            >
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+              <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Groq)</option>
+              <option value="llama-3.1-8b-instant">Llama 3.1 8B (Groq)</option>
+            </select>
           </div>
-          <span className="rounded-full border border-rescue-pink/30 bg-rescue-pink/10 px-2.5 py-1 text-xs text-rescue-pink">
+          <span className="shrink-0 rounded-full border border-rescue-pink/30 bg-rescue-pink/10 px-2.5 py-1 text-xs text-rescue-pink self-start mt-0.5">
             {parsedLog.framework}
           </span>
         </div>
       </div>
+
 
       <div className="space-y-4 overflow-y-auto p-4">
         <section className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
@@ -68,7 +81,10 @@ export function AiAssistant() {
             )}
             Analysis
           </div>
-          <p className="text-sm leading-6 text-slate-300">{aiResponses[assistantMode]}</p>
+          <p className="text-sm leading-6 text-slate-300 whitespace-pre-wrap">
+            {aiSummary || aiResponses[assistantMode]}
+          </p>
+
         </section>
 
         <DiffViewer />

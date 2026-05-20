@@ -100,3 +100,45 @@ CodeRescue could not find a small readable source file in this repository.
 Try another repository, or add a README / source file under src, app, pages, or components.`
   };
 }
+
+export type DiffLine = {
+  id: string;
+  tone: "add" | "remove" | "neutral";
+  text: string;
+};
+
+export function generateDiff(original: string, modified: string): DiffLine[] {
+  const originalLines = (original || "").split("\n");
+  const modifiedLines = (modified || "").split("\n");
+
+  const diff: DiffLine[] = [];
+  const added = modifiedLines.filter((line) => line.trim() && !originalLines.includes(line));
+  const removed = originalLines.filter((line) => line.trim() && !modifiedLines.includes(line));
+
+  removed.slice(0, 3).forEach((line, index) => {
+    diff.push({
+      id: `rem-${index}-${Date.now()}`,
+      tone: "remove",
+      text: `- ${line.trim()}`
+    });
+  });
+
+  added.slice(0, 3).forEach((line, index) => {
+    diff.push({
+      id: `add-${index}-${Date.now()}`,
+      tone: "add",
+      text: `+ ${line.trim()}`
+    });
+  });
+
+  if (diff.length === 0) {
+    diff.push({
+      id: "no-changes",
+      tone: "neutral",
+      text: "No changes detected."
+    });
+  }
+
+  return diff;
+}
+

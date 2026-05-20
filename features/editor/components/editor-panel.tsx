@@ -13,7 +13,19 @@ const editorStats: Array<[string, string, LucideIcon]> = [
 ];
 
 export function EditorPanel() {
-  const { selectedFile, openTabs, fileContent, setFileContent, selectFile, applied } = useWorkspace();
+  const {
+    selectedFile,
+    openTabs,
+    fileContent,
+    setFileContent,
+    selectFile,
+    diffMode,
+    setDiffMode,
+    saveFile,
+    originalContent,
+    applied
+  } = useWorkspace();
+
 
   return (
     <section className="flex min-h-[680px] min-w-0 flex-col bg-[#070b14] lg:min-h-0">
@@ -26,11 +38,22 @@ export function EditorPanel() {
           <p className="truncate text-xs text-slate-500">{selectedFile.path}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-sm text-slate-300 hover:bg-white/[0.08]">
+          <button
+            onClick={saveFile}
+            className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-sm text-slate-300 hover:bg-white/[0.08]"
+          >
             <Save className="h-4 w-4" />
             Save
           </button>
-          <button className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border border-rescue-green/30 bg-rescue-green/10 px-3 text-sm text-rescue-green hover:bg-rescue-green/15">
+          <button
+            onClick={() => setDiffMode(!diffMode)}
+            className={cn(
+              "focus-ring inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm transition",
+              diffMode
+                ? "border-rescue-green bg-rescue-green/20 text-rescue-green hover:bg-rescue-green/30"
+                : "border-rescue-green/30 bg-rescue-green/10 text-rescue-green hover:bg-rescue-green/15"
+            )}
+          >
             <Diff className="h-4 w-4" />
             Diff preview
           </button>
@@ -57,9 +80,16 @@ export function EditorPanel() {
 
       <div className="relative min-h-0 flex-1">
         <div className="absolute inset-0">
-          <MonacoPane language={selectedFile.language} value={fileContent} onChange={setFileContent} />
+          <MonacoPane
+            language={selectedFile.language}
+            value={fileContent}
+            onChange={setFileContent}
+            diffMode={diffMode}
+            originalValue={originalContent}
+          />
         </div>
       </div>
+
 
       <div className="grid border-t border-white/10 bg-black/20 md:grid-cols-3">
         {editorStats.map(([label, value, Icon]) => (
